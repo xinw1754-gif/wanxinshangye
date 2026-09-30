@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人商业定位探索</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #0a0a0a; color: #e8e8e8; min-height: 100vh; padding: 24px 16px; }
+  .wrap { max-width: 600px; margin: 0 auto; }
+  .card { background: #141414; border: 1px solid #262626; border-radius: 16px; padding: 24px; margin-bottom: 16px; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+  .sub { font-size: 14px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+  .q-title { font-size: 16px; font-weight: 500; margin-bottom: 16px; line-height: 1.6; }
+  .opt { display: block; padding: 14px 16px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 10px; margin-bottom: 10px; cursor: pointer; font-size: 14px; line-height: 1.5; transition: all .15s; }
+  .opt:hover { border-color: #d4af37; }
+  .opt.selected { border-color: #d4af37; background: #1f1a0d; }
+  .btn { width: 100%; padding: 16px; background: #d4af37; color: #0a0a0a; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .progress { font-size: 12px; color: #666; margin-bottom: 12px; }
+  .bar { height: 2px; background: #262626; border-radius: 1px; margin-bottom: 24px; overflow: hidden; }
+  .bar-inner { height: 100%; background: #d4af37; transition: width .3s; }
+  .radar { width: 100%; height: 280px; }
+  .type-name { font-size: 28px; font-weight: 700; color: #d4af37; margin-bottom: 12px; }
+  .type-desc { font-size: 14px; line-height: 1.8; color: #bbb; margin-bottom: 24px; }
+  .section-title { font-size: 15px; font-weight: 600; color: #d4af37; margin: 20px 0 12px; }
+  .dir-item { padding: 12px 16px; background: #1c1c1c; border-radius: 10px; margin-bottom: 10px; font-size: 14px; line-height: 1.6; }
+  .dir-item b { color: #d4af37; }
+  input, textarea { width: 100%; padding: 12px 14px; background: #1c1c1c; border: 1px solid #2a2a2a; border-radius: 10px; color: #e8e8e8; font-size: 14px; margin-bottom: 12px; font-family: inherit; }
+  input:focus, textarea:focus { outline: none; border-color: #d4af37; }
+  .hint { font-size: 12px; color: #666; margin-bottom: 16px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+// ========== 配置区（填你自己的 4 个值）==========
+const CONFIG = {
+  APP_ID: 'cli_aa37afb47239dbb4',
+  APP_SECRET: 'plEWyCPXBo3PTj62lD2FjbYkzh3Lgsig',
+  APP_TOKEN: 'DpnNw5Ngvitwalkrxfmcx34xnfb',
+  TABLE_ID: 'tblCWAVX5gtl7U13'
+};
+
+// ========== 题库 ==========
+const QUESTIONS = [
+  // 基础信息
+  { id:'q1', type:'info', title:'你的年龄阶段？', options:[
+    {key:'A', text:'18岁以下'}, {key:'B', text:'18-22岁'}, {key:'C', text:'23-28岁'},
+    {key:'D', text:'29-35岁'}, {key:'E', text:'35岁以上'}
+  ]},
+  { id:'q2', type:'info', title:'你目前处于什么状态？', options:[
+    {key:'A', text:'学生'}, {key:'B', text:'上班族'}, {key:'C', text:'自由职业'},
+    {key:'D', text:'创业/做生意'}, {key:'E', text:'正在寻找新的方向'}
+  ]},
+  { id:'q3', type:'info', title:'你目前最大的困惑是什么？', options:[
+    {key:'A', text:'不知道未来做什么'}, {key:'B', text:'想赚钱，但不知道适合自己的方向'},
+    {key:'C', text:'想创业，但不知道做什么'}, {key:'D', text:'有想法，但收入一直无法突破'},
+    {key:'E', text:'想改变，但不知道从哪里开始'}
+  ]},
+
+  // 核心评分题（Q4-Q28）
+  { id:'q4', title:'当你看到一个普通人突然把一个项目做成功，你第一反应是什么？', options:[
+    {key:'A', text:'他运气比较好', scores:{O:0}},
+    {key:'B', text:'想知道他是怎么做到的', scores:{O:1}},
+    {key:'C', text:'想研究这个模式能不能复制', scores:{O:2}},
+    {key:'D', text:'想认识他，看看能不能学习或合作', scores:{R:2}},
+    {key:'E', text:'觉得这种成功离自己比较远', scores:{O:0}}
+  ]},
+  { id:'q5', title:'当你看到一个产品突然爆火，你最容易做什么？', options:[
+    {key:'A', text:'买来看看', scores:{O:0}},
+    {key:'B', text:'分析它为什么火', scores:{O:2}},
+    {key:'C', text:'思考自己能不能做类似的', scores:{O:2}},
+    {key:'D', text:'研究它背后的供应链、渠道或资源', scores:{R:2}},
+    {key:'E', text:'看看热闹，很快就过去了', scores:{O:0}}
+  ]},
+  { id:'q6', title:'如果一个朋友想创业，你最容易给他的建议是？', options:[
+    {key:'A', text:'推荐一个你听说过的赚钱项目', scores:{O:1}},
+    {key:'B', text:'先看看他擅长什么、喜欢什么', scores:{P:2}},
+    {key:'C', text:'先分析市场有没有需求', scores:{O:2}},
+    {key:'D', text:'看看他有没有资源和人脉', scores:{R:2}},
+    {key:'E', text:'劝他先别急，创业风险比较大', scores:{E:0}}
+  ]},
+  { id:'q7', title:'你认为赚钱最重要的东西是什么？', options:[
+    {key:'A', text:'一项真正有价值的技能', scores:{P:2}},
+    {key:'B', text:'发现别人没有发现的机会', scores:{O:2}},
+    {key:'C', text:'强大的执行力', scores:{E:2}},
+    {key:'D', text:'资源、人脉和信息差', scores:{R:2}},
+    {key:'E', text:'能够长期运转的商业系统', scores:{S:2}}
+  ]},
+  { id:'q8', title:'当你发现一个可能赚钱的新机会时，你通常会？', options:[
+    {key:'A', text:'马上试一下', scores:{E:2}},
+    {key:'B', text:'先研究清楚再决定', scores:{O:1,P:1}},
+    {key:'C', text:'找别人一起讨论', scores:{R:2}},
+    {key:'D', text:'先做计划和测算', scores:{S:2}},
+    {key:'E', text:'先看看有没有别人成功', scores:{O:0}}
+  ]},
+  { id:'q9', title:'下面哪类东西最容易让你产生兴趣？', options:[
+    {key:'A', text:'新项目、新趋势、新机会', scores:{O:2}},
+    {key:'B', text:'专业知识和技能', scores:{P:2}},
+    {key:'C', text:'人和人之间的关系', scores:{R:2}},
+    {key:'D', text:'商业模式和赚钱逻辑', scores:{S:2}},
+    {key:'E', text:'投资、资产和长期收益', scores:{S:1,O:1}}
+  ]},
+  { id:'q10', title:'看到一个赚钱案例时，你最想知道的是？', options:[
+    {key:'A', text:'他具体做了什么', scores:{P:1,E:1}},
+    {key:'B', text:'他为什么能成功', scores:{O:2}},
+    {key:'C', text:'我能不能马上复制', scores:{E:2}},
+    {key:'D', text:'他是怎么获得资源的', scores:{R:2}},
+    {key:'E', text:'这个模式能不能长期产生收入', scores:{S:2}}
+  ]},
+  { id:'q11', title:'如果让你选择创业中的一个角色，你更愿意做？', options:[
+    {key:'A', text:'产品创造者', scores:{P:2}},
+    {key:'B', text:'市场和机会发现者', scores:{O:2}},
+    {key:'C', text:'销售、谈判、合作的人', scores:{R:2}},
+    {key:'D', text:'技术/专业能力提供者', scores:{P:2}},
+    {key:'E', text:'建立流程和系统的人', scores:{S:2}}
+  ]},
+  { id:'q12', title:'下面哪一种描述最像你？', options:[
+    {key:'A', text:'我喜欢不断寻找新的可能性', scores:{O:2}},
+    {key:'B', text:'我喜欢把一件事情研究透', scores:{P:2}},
+    {key:'C', text:'我比较擅长和别人沟通合作', scores:{R:2}},
+    {key:'D', text:'我喜欢自己创造东西', scores:{P:1,S:1}},
+    {key:'E', text:'我喜欢把混乱的事情整理成系统', scores:{S:2}}
+  ]},
+  { id:'q13', title:'如果让你提升一种能力，你最想提升？', options:[
+    {key:'A', text:'发现机会的能力', scores:{O:2}},
+    {key:'B', text:'专业技能', scores:{P:2}},
+    {key:'C', text:'销售和沟通能力', scores:{R:2}},
+    {key:'D', text:'资源整合能力', scores:{R:2}},
+    {key:'E', text:'建立商业系统的能力', scores:{S:2}}
+  ]},
+  { id:'q14', title:'当你突然产生一个很好的想法时，你通常会？', options:[
+    {key:'A', text:'马上开始做', scores:{E:2}},
+    {key:'B', text:'先大量收集资料', scores:{P:1,O:1}},
+    {key:'C', text:'找人交流一下', scores:{R:2}},
+    {key:'D', text:'写计划、做准备', scores:{S:2}},
+    {key:'E', text:'想了很多，但经常没有开始', scores:{E:0}}
+  ]},
+  { id:'q15', title:'如果一个项目第一次失败了，你会？', options:[
+    {key:'A', text:'找原因，然后马上调整', scores:{E:2}},
+    {key:'B', text:'分析失败原因，决定要不要继续', scores:{S:2}},
+    {key:'C', text:'找有经验的人请教', scores:{R:2}},
+    {key:'D', text:'再坚持一段时间', scores:{E:1}},
+    {key:'E', text:'很容易怀疑自己', scores:{E:0}}
+  ]},
+  { id:'q16', title:'如果一个项目前期几个月都没有明显收入，你能接受多久？', options:[
+    {key:'A', text:'1个月左右'}, {key:'B', text:'3个月左右'}, {key:'C', text:'半年左右'},
+    {key:'D', text:'一年以上'}, {key:'E', text:'要看具体项目'}
+  ]},
+  { id:'q17', title:'面对大量重复性工作，你通常会？', options:[
+    {key:'A', text:'很快失去兴趣', scores:{O:2}},
+    {key:'B', text:'想办法优化流程', scores:{S:2}},
+    {key:'C', text:'想办法交给别人', scores:{R:2}},
+    {key:'D', text:'只要有收入就可以坚持', scores:{E:2}},
+    {key:'E', text:'如果能积累长期价值，我可以接受', scores:{S:1,E:1}}
+  ]},
+  { id:'q18', title:'你认为自己目前最大的阻碍是什么？', options:[
+    {key:'A', text:'想法太多，容易分散'}, {key:'B', text:'行动力不够'},
+    {key:'C', text:'不知道方向'}, {key:'D', text:'缺资源、缺人脉'},
+    {key:'E', text:'容易追求完美，迟迟不开始'}
+  ]},
+  { id:'q19', title:'如果让你选择一种赚钱方式，你更愿意？', options:[
+    {key:'A', text:'靠自己的专业技能赚钱', scores:{P:2}},
+    {key:'B', text:'做一个产品赚钱', scores:{P:1,S:1}},
+    {key:'C', text:'不断寻找市场机会赚钱', scores:{O:2}},
+    {key:'D', text:'整合资源、赚中间价值', scores:{R:2}},
+    {key:'E', text:'建立能够持续产生收入的资产或系统', scores:{S:2}}
+  ]},
+  { id:'q20', title:'你最喜欢哪种工作状态？', options:[
+    {key:'A', text:'安静地研究一个东西', scores:{P:2}},
+    {key:'B', text:'到处寻找新的机会', scores:{O:2}},
+    {key:'C', text:'和各种人打交道、谈合作', scores:{R:2}},
+    {key:'D', text:'自己创造产品或内容', scores:{P:1,S:1}},
+    {key:'E', text:'搭建一个系统，让它自己运转', scores:{S:2}}
+  ]},
+  { id:'q21', title:'如果未来已经实现了基本的经济自由，你最想做什么？', options:[
+    {key:'A', text:'学习和研究自己感兴趣的东西'}, {key:'B', text:'不断尝试新的项目'},
+    {key:'C', text:'投资不同的项目'}, {key:'D', text:'旅行、生活、享受时间'},
+    {key:'E', text:'做自己真正喜欢的事情'}
+  ]},
+  { id:'q22', title:'你最希望别人怎么评价你？', options:[
+    {key:'A', text:'"这个人专业能力很强。"', scores:{P:2}},
+    {key:'B', text:'"这个人商业头脑很好。"', scores:{O:2}},
+    {key:'C', text:'"这个人资源和人脉很厉害。"', scores:{R:2}},
+    {key:'D', text:'"这个人特别有创造力。"', scores:{P:1,O:1}},
+    {key:'E', text:'"这个人很会做事业和建立系统。"', scores:{S:2}}
+  ]},
+  { id:'q23', title:'如果只能选择一个，你最想拥有？', options:[
+    {key:'A', text:'一项非常赚钱的技能', scores:{P:2}},
+    {key:'B', text:'一个成功的项目', scores:{E:1,S:1}},
+    {key:'C', text:'一群靠谱的合作伙伴', scores:{R:2}},
+    {key:'D', text:'一个属于自己的个人品牌', scores:{P:1,O:1}},
+    {key:'E', text:'多个能够持续产生收入的来源', scores:{S:2}}
+  ]},
+  { id:'q24', title:'对你来说，赚钱最大的意义是什么？', options:[
+    {key:'A', text:'获得时间自由'}, {key:'B', text:'获得更多财富'},
+    {key:'C', text:'证明自己的能力'}, {key:'D', text:'创造一些真正有价值的东西'},
+    {key:'E', text:'让自己和家人的生活更好'}
+  ]},
+  { id:'q25', title:'你最理想的人生状态是什么？', options:[
+    {key:'A', text:'自由安排自己的时间'}, {key:'B', text:'成为某个领域的专家'},
+    {key:'C', text:'拥有属于自己的事业'}, {key:'D', text:'能够影响和帮助很多人'},
+    {key:'E', text:'拥有稳定、持续增长的财富'}
+  ]},
+  { id:'q26', title:'你最害怕自己未来变成什么样？', options:[
+    {key:'A', text:'浪费了大量时间'}, {key:'B', text:'明明想做，却发现自己没有能力'},
+    {key:'C', text:'一直失败，什么都没有做成'}, {key:'D', text:'一辈子被工作和环境限制'},
+    {key:'E', text:'年龄越来越大，却没有任何积累'}
+  ]},
+  { id:'q27', title:'如果给你5年时间，你最希望实现什么？', options:[
+    {key:'A', text:'找到真正适合自己的方向'}, {key:'B', text:'把收入提升到一个新的阶段'},
+    {key:'C', text:'做成自己的事业'}, {key:'D', text:'建立属于自己的资产和收入来源'},
+    {key:'E', text:'活成自己真正喜欢的样子'}
+  ]},
+  { id:'q28', title:'如果现在只能解决一个问题，你最希望解决什么？', options:[
+    {key:'A', text:'更了解自己'}, {key:'B', text:'学会一项赚钱技能'},
+    {key:'C', text:'找到一个赚钱机会'}, {key:'D', text:'找到靠谱的合作伙伴'},
+    {key:'E', text:'真正开始行动'}
+  ]},
+
+  // 开放题
+  { id:'q29', type:'text', title:'你过去做过哪些赚钱尝试？', placeholder:'不管成功还是失败，都可以写。比如兼职、摆摊、电商、投资、做项目、自由职业等。' },
+  { id:'q30', type:'text', title:'你目前最感兴趣的领域是什么？', placeholder:'例如：电商、AI、短视频、投资、餐饮、教育、游戏、实体生意、自媒体......' },
+  { id:'q31', type:'text', title:'你认为自己最大的优势是什么？', placeholder:'可以写技能、性格、思维方式、人际关系、执行力、资源等。' },
+  { id:'q32', type:'text', title:'如果完全不用考虑钱，你最想做什么？' },
+  { id:'q33', type:'text', title:'你希望5年后的自己是什么样子？', placeholder:'可以具体描述你的收入、生活方式、工作状态、家庭、自由时间等。' },
+
+  // 联系方式
+  { id:'q34', type:'contact', title:'想获得你的完整商业定位分析报告，可以留下联系方式', placeholder:'手机号 / 微信号（非必填）' }
+];
+
+// ========== 评分维度最高分（自动算，这里写死也可）==========
+const MAX_SCORES = { O:24, P:19, R:20, E:15, S:22 };
+
+// ========== 类型定义 ==========
+const TYPES = {
+  'O+E': { name:'机会猎手', desc:'你对机会敏感，也敢试。你适合做能快速验证、快速调整的事情，而不是长期闷头打磨。', dirs:['短视频带货 / 信息差项目','本地生活服务','轻资产快跑型项目'] },
+  'O+S': { name:'机会型研究者', desc:'你既对新机会敏感，又喜欢研究模式。你适合做分析型、选品型、投资型的事情。', dirs:['商业分析 / 选品','投资类项目','趋势研究 + 内容输出'] },
+  'O+P': { name:'个人品牌型', desc:'你有专业能力，也对机会敏感。你适合把专业能力变成个人品牌。', dirs:['自媒体 / 个人IP','课程 / 知识付费','专业咨询'] },
+  'O+R': { name:'资源连接者', desc:'你擅长发现机会，也擅长和人打交道。你适合做连接型、撮合型的事情。', dirs:['销售 / 渠道','商务合作','资源撮合'] },
+  'P+S': { name:'专家型产品人', desc:'你能钻研，也能把东西系统化。你适合做产品、做知识体系。', dirs:['知识付费','工具型产品','专业咨询'] },
+  'P+E': { name:'专业执行者', desc:'你有专业能力，执行力也强。你适合靠专业能力接单、做服务。', dirs:['自由职业','技术服务','专业接单'] },
+  'P+R': { name:'专业资源型', desc:'你有专业能力，也擅长整合资源。你适合做需要专业+人脉的事情。', dirs:['专业服务 + 渠道','行业咨询','专业型中介'] },
+  'R+S': { name:'资源操盘手', desc:'你擅长整合资源，也能搭建系统。你适合做平台、做操盘。', dirs:['中介平台','供应链整合','项目操盘'] },
+  'R+E': { name:'资源推动者', desc:'你会来事，也能推动事情落地。你适合做需要推动力的商业角色。', dirs:['销售管理','渠道拓展','商务合作'] },
+  'E+S': { name:'执行型创业者', desc:'你能落地，也能建流程。你适合做实体、做标准化服务。', dirs:['实体生意','连锁 / 标准化服务','流程型创业'] }
+};
+
+// ========== 状态 ==========
+let state = {
+  step: 0,
+  answers: {},
+  result: null
+};
+
+// ========== 渲染 ==========
+function render() {
+  const app = document.getElementById('app');
+  if (state.step === 0) return renderWelcome(app);
+  if (state.step === 1) return renderQuiz(app);
+  if (state.step === 2) return renderReport(app);
+}
+
+function renderWelcome(app) {
+  app.innerHTML = `
+    <div class="card">
+      <h1>个人商业定位探索</h1>
+      <p class="sub">用 3 分钟，找到更适合你的商业方向。<br>共 34 题，其中 25 题用于分析你的商业类型。</p>
+      <button class="btn" onclick="startQuiz()">开始测试</button>
+    </div>
+  `;
+}
+
+function startQuiz() {
+  state.step = 1;
+  state.stepIndex = 0;
+  render();
+}
+
+function renderQuiz(app) {
+  const total = QUESTIONS.length;
+  const idx = state.stepIndex;
+  const q = QUESTIONS[idx];
+  const ans = state.answers[q.id];
+
+  let optionsHTML = '';
+  if (q.type === 'text') {
+    optionsHTML = `<textarea rows="4" placeholder="${q.placeholder||''}" oninput="setText('${q.id}', this.value)">${ans||''}</textarea>`;
+  } else if (q.type === 'contact') {
+    optionsHTML = `<input type="text" placeholder="${q.placeholder||''}" oninput="setText('${q.id}', this.value)" value="${ans||''}">`;
+  } else {
+    optionsHTML = q.options.map(o => `
+      <div class="opt ${ans===o.key?'selected':''}" onclick="selectOpt('${q.id}', '${o.key}')">${o.text}</div>
+    `).join('');
+  }
+
+  const canNext = q.type === 'text' || q.type === 'contact' ? true : !!ans;
+
+  app.innerHTML = `
+    <div class="card">
+      <div class="progress">第 ${idx+1} / ${total} 题</div>
+      <div class="bar"><div class="bar-inner" style="width:${(idx/total)*100}%"></div></div>
+      <div class="q-title">${q.title}</div>
+      ${optionsHTML}
+      <button class="btn" ${canNext?'':'disabled'} onclick="nextQ()">${idx===total-1?'提交并查看报告':'下一题'}</button>
+    </div>
+  `;
+}
+
+function selectOpt(qid, key) {
+  state.answers[qid] = key;
+  render();
+}
+function setText(qid, val) {
+  state.answers[qid] = val;
+  // 不重新渲染，避免失焦
+}
+function nextQ() {
+  if (state.stepIndex < QUESTIONS.length - 1) {
+    state.stepIndex++;
+    render();
+  } else {
+    finishQuiz();
+  }
+}
+
+// ========== 算分 ==========
+function calcScores() {
+  const scores = { O:0, P:0, R:0, E:0, S:0 };
+  QUESTIONS.forEach(q => {
+    if (q.type === 'info' || q.type === 'text' || q.type === 'contact') return;
+    if (!q.options) return;
+    const key = state.answers[q.id];
+    const opt = q.options.find(o => o.key === key);
+    if (opt && opt.scores) {
+      Object.keys(opt.scores).forEach(k => { scores[k] += opt.scores[k]; });
+    }
+  });
+  const pct = {};
+  Object.keys(scores).forEach(k => {
+    pct[k] = Math.round(scores[k] / MAX_SCORES[k] * 100);
+  });
+  return pct;
+}
+
+function getType(pct) {
+  const sorted = Object.keys(pct).sort((a,b) => pct[b]-pct[a]);
+  const first = sorted[0], second = sorted[1];
+  const key1 = first+'+'+second, key2 = second+'+'+first;
+  return TYPES[key1] || TYPES[key2] || { name:'综合型', desc:'你具备多种商业特质，建议结合自己的兴趣和资源，选择最适合的方向。', dirs:['结合自身优势探索'] };
+}
+
+// ========== 生成报告 ==========
+function finishQuiz() {
+  state.result = { pct: calcScores() };
+  state.result.type = getType(state.result.pct);
+  state.step = 2;
+  render();
+  submitToFeishu();
+}
+
+function renderReport(app) {
+  const { pct, type } = state.result;
+  const dirsHTML = type.dirs.map(d => `<div class="dir-item">· ${d}</div>`).join('');
+  app.innerHTML = `
+    <div class="card">
+      <div class="type-name">${type.name}</div>
+      <div class="type-desc">${type.desc}</div>
+
+      <div class="section-title">你的五维得分</div>
+      <canvas id="radar" class="radar"></canvas>
+
+      <div class="section-title">推荐方向</div>
+      ${dirsHTML}
+
+      <div class="section-title">你当前最需要解决的</div>
+      <div class="dir-item">${getAdvice()}</div>
+
+      <div class="section-title">想获得完整报告？</div>
+      <p class="hint">留个联系方式，我们会把完整分析发给你（非必填）。</p>
+      <input type="text" id="contact" placeholder="手机号 / 微信号">
+      <button class="btn" onclick="saveContact()">提交</button>
+    </div>
+  `;
+  drawRadar(pct);
+}
+
+function getAdvice() {
+  const q28 = state.answers['q28'];
+  const map = { A:'先做自我认知梳理', B:'优先学一项能变现的技能', C:'先找到一个可验证的小机会', D:'先找到 1-2 个靠谱的合作者', E:'别想了，先动手做一件小事' };
+  return map[q28] || '先从小事开始行动';
+}
+
+function drawRadar(pct) {
+  const canvas = document.getElementById('radar');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth, h = 280;
+  canvas.width = w * dpr; canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+
+  const cx = w/2, cy = h/2, r = 90;
+  const keys = ['O','P','R','E','S'];
+  const labels = ['机会','专业','资源','执行','系统'];
+  const angleStep = Math.PI * 2 / 5;
+  const startAngle = -Math.PI / 2;
+
+  // 网格
+  ctx.strokeStyle = '#262626';
+  for (let level = 1; level <= 4; level++) {
+    ctx.beginPath();
+    for (let i = 0; i <= 5; i++) {
+      const a = startAngle + angleStep * i;
+      const rr = r * level / 4;
+      const x = cx + Math.cos(a) * rr;
+      const y = cy + Math.sin(a) * rr;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+  // 轴线
+  for (let i = 0; i < 5; i++) {
+    const a = startAngle + angleStep * i;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a)*r, cy + Math.sin(a)*r);
+    ctx.stroke();
+  }
+  // 数据
+  ctx.beginPath();
+  ctx.fillStyle = 'rgba(212,175,55,0.25)';
+  ctx.strokeStyle = '#d4af37';
+  ctx.lineWidth = 2;
+  for (let i = 0; i <= 5; i++) {
+    const idx = i % 5;
+    const a = startAngle + angleStep * idx;
+    const val = pct[keys[idx]] / 100;
+    const x = cx + Math.cos(a) * r * val;
+    const y = cy + Math.sin(a) * r * val;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 标签
+  ctx.fillStyle = '#888';
+  ctx.font = '12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  for (let i = 0; i < 5; i++) {
+    const a = startAngle + angleStep * i;
+    const x = cx + Math.cos(a) * (r + 20);
+    const y = cy + Math.sin(a) * (r + 20);
+    ctx.fillText(labels[i] + ' ' + pct[keys[i]] + '%', x, y);
+  }
+}
+
+// ========== 提交到飞书 ==========
+async function submitToFeishu() {
+  try {
+    const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app_id: CONFIG.APP_ID, app_secret: CONFIG.APP_SECRET })
+    });
+    const tokenData = await tokenRes.json();
+    const token = tokenData.tenant_access_token;
+
+    const fields = {
+      '年龄': state.answers['q1'] || '',
+      '状态': state.answers['q2'] || '',
+      '类型': state.result.type.name,
+      '答案详情': JSON.stringify(state.answers),
+      '得分': JSON.stringify(state.result.pct)
+    };
+
+    await fetch(`https://open.feishu.cn/open-apis/bitable/v1/apps/${CONFIG.APP_TOKEN}/tables/${CONFIG.TABLE_ID}/records`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ fields })
+    });
+  } catch (e) {
+    console.error('提交失败', e);
+  }
+}
+
+async function saveContact() {
+  const contact = document.getElementById('contact').value.trim();
+  if (!contact) { alert('已提交，感谢参与！'); return; }
+  try {
+    const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ app_id: CONFIG.APP_ID, app_secret: CONFIG.APP_SECRET })
+    });
+    const tokenData = await tokenRes.json();
+    const token = tokenData.tenant_access_token;
+
+    const fields = {
+      '时间': Date.now(),
+      '年龄': state.answers['q1'] || '',
+      '状态': state.answers['q2'] || '',
+      '类型': state.result.type.name,
+      '联系方式': contact,
+      '答案详情': JSON.stringify(state.answers),
+      '得分': JSON.stringify(state.result.pct)
+    };
+
+    await fetch(`https://open.feishu.cn/open-apis/bitable/v1/apps/${CONFIG.APP_TOKEN}/tables/${CONFIG.TABLE_ID}/records`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ fields })
+    });
+    alert('提交成功，感谢参与！');
+  } catch (e) {
+    alert('提交成功，感谢参与！');
+  }
+}
+
+render();
+</script>
+</body>
+</html>
