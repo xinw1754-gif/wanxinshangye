@@ -36,13 +36,7 @@
 
 <script>
 // ========== 配置区（填你自己的 4 个值）==========
-const CONFIG = {
-  APP_ID: 'cli_aa37afb47239dbb4',
-  APP_SECRET: 'plEWyCPXBo3PTj62lD2FjbYkzh3Lgsig',
-  APP_TOKEN: 'DpnNw5Ngvitwalkrxfmcx34xnfb',
-  TABLE_ID: 'tblCWAVX5gtl7U13'
-};
-
+const API_URL = 'https://feishu-api-three.vercel.app/api/submit';
 // ========== 题库 ==========
 const QUESTIONS = [
   // 基础信息
@@ -461,14 +455,6 @@ function drawRadar(pct) {
 // ========== 提交到飞书 ==========
 async function submitToFeishu() {
   try {
-    const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_id: CONFIG.APP_ID, app_secret: CONFIG.APP_SECRET })
-    });
-    const tokenData = await tokenRes.json();
-    const token = tokenData.tenant_access_token;
-
     const fields = {
       '年龄': state.answers['q1'] || '',
       '状态': state.answers['q2'] || '',
@@ -476,29 +462,18 @@ async function submitToFeishu() {
       '答案详情': JSON.stringify(state.answers),
       '得分': JSON.stringify(state.result.pct)
     };
-
-    await fetch(`https://open.feishu.cn/open-apis/bitable/v1/apps/${CONFIG.APP_TOKEN}/tables/${CONFIG.TABLE_ID}/records`, {
+    await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ fields })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fields)
     });
   } catch (e) {
     console.error('提交失败', e);
   }
 }
-
 async function saveContact() {
   const contact = document.getElementById('contact').value.trim();
-  if (!contact) { alert('已提交，感谢参与！'); return; }
   try {
-    const tokenRes = await fetch('https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ app_id: CONFIG.APP_ID, app_secret: CONFIG.APP_SECRET })
-    });
-    const tokenData = await tokenRes.json();
-    const token = tokenData.tenant_access_token;
-
     const fields = {
       '时间': Date.now(),
       '年龄': state.answers['q1'] || '',
@@ -508,18 +483,16 @@ async function saveContact() {
       '答案详情': JSON.stringify(state.answers),
       '得分': JSON.stringify(state.result.pct)
     };
-
-    await fetch(`https://open.feishu.cn/open-apis/bitable/v1/apps/${CONFIG.APP_TOKEN}/tables/${CONFIG.TABLE_ID}/records`, {
+    await fetch(API_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-      body: JSON.stringify({ fields })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(fields)
     });
     alert('提交成功，感谢参与！');
   } catch (e) {
     alert('提交成功，感谢参与！');
   }
 }
-
 render();
 </script>
 </body>
